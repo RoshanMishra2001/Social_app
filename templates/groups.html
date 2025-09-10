@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ theme }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Groups - Social App</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/theme.css">
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white dark:bg-gray-800 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <a href="/" class="text-xl font-bold text-blue-600 dark:text-blue-400">SocialApp</a>
+                    </div>
+                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                        <a href="/" class="border-transparent text-gray-500 dark:text-gray-300 hover:border-gray-300 hover:text-gray-700 dark:hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Home
+                        </a>
+                        <a href="/groups" class="border-blue-500 text-gray-900 dark:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Groups
+                        </a>
+                    </div>
+                </div>
+                <div class="hidden sm:ml-6 sm:flex sm:items-center">
+                    <div class="ml-3 relative">
+                        <div>
+                            <a href="/profile" class="flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <img class="h-8 w-8 rounded-full" src="{{ user.profile_picture or '/static/images/default-avatar.png' }}" alt="{{ user.username }}">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="px-4 py-6 sm:px-0">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Groups</h1>
+                <a href="/groups/create" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center">
+                    <i class="fas fa-plus mr-2"></i> Create Group
+                </a>
+            </div>
+
+            <!-- Your Groups -->
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Your Groups</h2>
+                {% if user_groups %}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for group in user_groups %}
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+                        {% if group.cover_image %}
+                        <img src="{{ group.cover_image }}" alt="{{ group.name }}" class="w-full h-40 object-cover">
+                        {% else %}
+                        <div class="w-full h-40 bg-blue-600 flex items-center justify-center">
+                            <i class="fas fa-users text-white text-4xl"></i>
+                        </div>
+                        {% endif %}
+                        <div class="p-4">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ group.name }}</h3>
+                            <p class="text-gray-600 dark:text-gray-300 text-sm mt-1">{{ group.member_count }} members</p>
+                            <p class="text-gray-500 dark:text-gray-400 text-sm mt-2 line-clamp-2">{{ group.description or 'No description' }}</p>
+                            <div class="mt-4">
+                                <a href="/groups/{{ group.id }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">
+                                    View Group
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 text-center">
+                    <i class="fas fa-users text-gray-400 dark:text-gray-500 text-4xl mb-3"></i>
+                    <p class="text-gray-500 dark:text-gray-400">You haven't joined any groups yet.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- All Groups -->
+            <div>
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Discover Groups</h2>
+                {% if all_groups %}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for group in all_groups %}
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+                        {% if group.cover_image %}
+                        <img src="{{ group.cover_image }}" alt="{{ group.name }}" class="w-full h-40 object-cover">
+                        {% else %}
+                        <div class="w-full h-40 bg-blue-600 flex items-center justify-center">
+                            <i class="fas fa-users text-white text-4xl"></i>
+                        </div>
+                        {% endif %}
+                        <div class="p-4">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ group.name }}</h3>
+                            <p class="text-gray-600 dark:text-gray-300 text-sm mt-1">{{ group.member_count }} members</p>
+                            <p class="text-gray-500 dark:text-gray-400 text-sm mt-2 line-clamp-2">{{ group.description or 'No description' }}</p>
+                            <div class="mt-4 flex space-x-2">
+                                <a href="/groups/{{ group.id }}" class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-4 py-2 rounded-md text-sm">
+                                    View Group
+                                </a>
+                                <button onclick="joinGroup({{ group.id }})" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">
+                                    Join Group
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 text-center">
+                    <i class="fas fa-users text-gray-400 dark:text-gray-500 text-4xl mb-3"></i>
+                    <p class="text-gray-500 dark:text-gray-400">No groups available.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+
+    <script>
+        async function joinGroup(groupId) {
+            try {
+                const response = await fetch(`/api/groups/${groupId}/join`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const result = await response.json();
+
+                if (result.error) {
+                    alert(result.error);
+                } else {
+                    // Reload the page to reflect the changes
+                    window.location.reload();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while trying to join/leave the group');
+            }
+        }
+    </script>
+</body>
+</html>

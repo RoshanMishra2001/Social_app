@@ -1,0 +1,86 @@
+/* Light theme (default) */
+:root {
+    --bg-color: #f8fafc;
+    --text-color: #1f2937;
+    --card-bg: #ffffff;
+    --border-color: #e5e7eb;
+    --input-bg: #ffffff;
+}
+
+/* Dark theme */
+[data-theme="dark"] {
+    --bg-color: #111827;
+    --text-color: #f3f4f6;
+    --card-bg: #1f2937;
+    --border-color: #374151;
+    --input-bg: #374151;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+.bg-white {
+    background-color: var(--card-bg);
+}
+
+.bg-gray-100 {
+    background-color: var(--bg-color);
+}
+
+.border-gray-300 {
+    border-color: var(--border-color);
+}
+
+.text-gray-900 {
+    color: var(--text-color);
+}
+
+.text-gray-700 {
+    color: var(--text-color);
+}
+
+.text-gray-500 {
+    color: #9ca3af;
+}
+
+.bg-gray-200 {
+    background-color: var(--border-color);
+}
+
+.bg-gray-700 {
+    background-color: var(--card-bg);
+}
+
+.border-gray-600 {
+    border-color: var(--border-color);
+}
+
+.dark\:bg-gray-800 {
+    background-color: var(--card-bg);
+}
+
+.dark\:bg-gray-900 {
+    background-color: var(--bg-color);
+}
+
+.dark\:text-white {
+    color: var(--text-color);
+}
+
+.dark\:text-gray-300 {
+    color: var(--text-color);
+}
+
+.dark\:text-gray-400 {
+    color: #9ca3af;
+}
+
+.dark\:border-gray-600 {
+    border-color: var(--border-color);
+}
+
+.dark\:bg-gray-700 {
+    background-color: var(--input-bg);
+}

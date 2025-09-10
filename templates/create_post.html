@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Post - Social Media App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .profile-img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="/">SocialApp</a>
+            <div class="d-flex align-items-center">
+                <img src="{{ user.profile_picture }}" alt="Profile" class="profile-img me-2">
+                <span class="me-3">{{ user.username }}</span>
+                <a href="/" class="btn btn-outline-secondary btn-sm me-2">Home</a>
+                <a href="/logout" class="btn btn-outline-secondary btn-sm">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Create New Post</h4>
+                    </div>
+                    <div class="card-body">
+                        <form action="/api/posts" method="post" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="title" class="form-label">Title</label>
+                                <input type="text" class="form-control" id="title" name="title" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="content" class="form-label">Content</label>
+                                <textarea class="form-control" id="content" name="content" rows="4" required></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Add Media (Image or Video)</label>
+                                <div class="preview-container mb-3 p-3 text-center" id="previewContainer">
+                                    <div id="placeholderText">
+                                        <i class="bi bi-image display-4 text-muted d-block"></i>
+                                        <span class="text-muted">Select an image or video to upload</span>
+                                    </div>
+                                    <img id="mediaPreview" class="d-none" alt="Media preview">
+                                    <video id="videoPreview" class="d-none" controls></video>
+                                </div>
+                                <input type="file" class="form-control" id="media" name="media" accept="image/*,video/*" onchange="previewMedia(this)">
+                                <div class="form-text">Select either an image or a video</div>
+                            </div>
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a href="/" class="btn btn-secondary me-md-2">Cancel</a>
+                                <button type="submit" class="btn btn-primary">Post</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js">
+        // Update the JavaScript in create_post.html
+function previewMedia(input) {
+    const placeholder = document.getElementById('placeholderText');
+    const mediaPreview = document.getElementById('mediaPreview');
+    const videoPreview = document.getElementById('videoPreview');
+
+    // Reset previews
+    mediaPreview.classList.add('d-none');
+    videoPreview.classList.add('d-none');
+    placeholder.classList.add('d-none');
+
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const fileType = file.type.split('/')[0]; // 'image' or 'video'
+
+        if (fileType === 'image') {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                mediaPreview.src = e.target.result;
+                mediaPreview.classList.remove('d-none');
+            }
+            reader.readAsDataURL(file);
+        } else if (fileType === 'video') {
+            videoPreview.src = URL.createObjectURL(file);
+            videoPreview.classList.remove('d-none');
+        }
+    } else {
+        placeholder.classList.remove('d-none');
+    }
+}
+    </script>
+</body>
+</html>

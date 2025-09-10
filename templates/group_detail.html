@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ theme }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ group.name }} - Social App</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/theme.css">
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white dark:bg-gray-800 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <a href="/" class="text-xl font-bold text-blue-600 dark:text-blue-400">SocialApp</a>
+                    </div>
+                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                        <a href="/" class="border-transparent text-gray-500 dark:text-gray-300 hover:border-gray-300 hover:text-gray-700 dark:hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Home
+                        </a>
+                        <a href="/groups" class="border-blue-500 text-gray-900 dark:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Groups
+                        </a>
+                    </div>
+                </div>
+                <div class="hidden sm:ml-6 sm:flex sm:items-center">
+                    <div class="ml-3 relative">
+                        <div>
+                            <a href="/profile" class="flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <img class="h-8 w-8 rounded-full" src="{{ user.profile_picture or '/static/images/default-avatar.png' }}" alt="{{ user.username }}">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Group Header -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mb-6">
+            {% if group.cover_image %}
+            <img src="{{ group.cover_image }}" alt="{{ group.name }}" class="w-full h-48 object-cover">
+            {% else %}
+            <div class="w-full h-48 bg-blue-600 flex items-center justify-center">
+                <i class="fas fa-users text-white text-6xl"></i>
+            </div>
+            {% endif %}
+
+            <div class="p-6">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ group.name }}</h1>
+                        <p class="text-gray-600 dark:text-gray-300 mt-1">{{ member_count }} members</p>
+                        <p class="text-gray-500 dark:text-gray-400 mt-2">{{ group.description or 'No description' }}</p>
+                    </div>
+
+                    <div>
+                        {% if is_member %}
+                        <button onclick="joinGroup({{ group.id }})" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md">
+                            Leave Group
+                        </button>
+                        {% else %}
+                        <button onclick="joinGroup({{ group.id }})" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                            Join Group
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Post (only for members) -->
+        {% if is_member %}
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Create a Post</h2>
+            <form action="/api/posts" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="group_id" value="{{ group.id }}">
+
+                <div class="mb-4">
+                    <input type="text" name="title" placeholder="Post title" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                </div>
+
+                <div class="mb-4">
+                    <textarea name="content" rows="3" placeholder="What's on your mind?" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"></textarea>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Media (optional)</label>
+                    <input type="file" name="media" accept="image/*,video/*" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                        Post
+                    </button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+
+        <!-- Group Posts -->
+        <div>
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Group Posts</h2>
+
+            {% if posts %}
+            <div class="space-y-6">
+                {% for post in posts %}
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                    <div class="flex items-start mb-4">
+                        <img src="{{ post.owner.profile_picture or '/static/images/default-avatar.png' }}" alt="{{ post.owner.username }}" class="h-10 w-10 rounded-full mr-3">
+                        <div>
+                            <h3 class="font-semibold text-gray-900 dark:text-white">{{ post.owner.username }}</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ post.created_at.strftime('%B %d, %Y at %H:%M') }}</p>
+                        </div>
+                    </div>
+
+                    <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-2">{{ post.title }}</h4>
+                    <p class="text-gray-700 dark:text-gray-300 mb-4">{{ post.content }}</p>
+
+                    {% if post.image_url %}
+                    <img src="{{ post.image_url }}" alt="Post image" class="w-full rounded-lg mb-4">
+                    {% endif %}
+
+                    {% if post.video_url %}
+                    <video src="{{ post.video_url }}" controls class="w-full rounded-lg mb-4"></video>
+                    {% endif %}
+
+                    <div class="flex items-center text-gray-500 dark:text-gray-400">
+                        <button onclick="likePost({{ post.id }})" class="flex items-center mr-4 {% if user.id in post.likes|map(attribute='user_id') %}text-blue-600{% endif %}">
+                            <i class="fas fa-thumbs-up mr-1"></i>
+                            <span>{{ post.likes|length }}</span>
+                        </button>
+
+                        <button onclick="toggleComments({{ post.id }})" class="flex items-center mr-4">
+                            <i class="fas fa-comment mr-1"></i>
+                            <span>{{ post.comments|length }}</span>
+                        </button>
+
+                        <button onclick="sharePost({{ post.id }})" class="flex items-center">
+                            <i class="fas fa-share mr-1"></i>
+                            <span>Share</span>
+                        </button>
+                    </div>
+
+                    <!-- Comments Section (initially hidden) -->
+                    <div id="comments-{{ post.id }}" class="mt-4 hidden">
+                        <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                            <form onsubmit="addComment(event, {{ post.id }})" class="mb-4">
+                                <div class="flex">
+                                    <input type="text" id="comment-content-{{ post.id }}" placeholder="Write a comment..." required class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-l-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-r-md">
+                                        Post
+                                    </button>
+                                </div>
+                            </form>
+
+                            <div id="comment-list-{{ post.id }}">
+                                {% for comment in post.comments %}
+                                <div class="mb-3">
+                                    <div class="flex items-start">
+                                        <img src="{{ comment.user.profile_picture or '/static/images/default-avatar.png' }}" alt="{{ comment.user.username }}" class="h-8 w-8 rounded-full mr-2">
+                                        <div class="bg-gray-100 dark:bg-gray-700 rounded-lg p-3 flex-1">
+                                            <h4 class="font-medium text-gray-900 dark:text-white">{{ comment.user.username }}</h4>
+                                            <p class="text-gray-700 dark:text-gray-300">{{ comment.content }}</p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ comment.created_at.strftime('%B %d, %Y at %H:%M') }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 text-center">
+                <i class="fas fa-comments text-gray-400 dark:text-gray-500 text-4xl mb-3"></i>
+                <p class="text-gray-500 dark:text-gray-400">No posts in this group yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <script>
+        async function joinGroup(groupId) {
+            try {
+                const response = await fetch(`/api/groups/${groupId}/join`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const result = await response.json();
+
+                if (result.error) {
+                    alert(result.error);
+                } else {
+                    // Reload the page to reflect the changes
+                    window.location.reload();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while trying to join/leave the group');
+            }
+        }
+
+        async function likePost(postId) {
+            try {
+                const response = await fetch(`/api/posts/${postId}/like`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const result = await response.json();
+
+                if (result.error) {
+                    alert(result.error);
+                } else {
+                    // Reload the page to reflect the changes
+                    window.location.reload();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while trying to like the post');
+            }
+        }
+
+        function toggleComments(postId) {
+            const commentsSection = document.getElementById(`comments-${postId}`);
+            commentsSection.classList.toggle('hidden');
+        }
+
+        async function addComment(event, postId) {
+            event.preventDefault();
+
+            const contentInput = document.getElementById(`comment-content-${postId}`);
+            const content = contentInput.value.trim();
+
+            if (!content) return;
+
+            try {
+                const formData = new FormData();
+                formData.append('content', content);
+
+                const response = await fetch(`/api/posts/${postId}/comment`, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const result = await response.json();
+
+                if (result.error) {
+                    alert(result.error);
+                } else if (result.success) {
+                    // Clear the input
+                    contentInput.value = '';
+
+                    // Add the new comment to the list
+                    const commentList = document.getElementById(`comment-list-${postId}`);
+
+                    const commentDiv = document.createElement('div');
+                    commentDiv.className = 'mb-3';
+                    commentDiv.innerHTML = `
+                        <div class="flex items-start">
+                            <img src="${result.comment.user.profile_picture || '/static/images/default-avatar.png'}" alt="${result.comment.user.username}" class="h-8 w-8 rounded-full mr-2">
+                            <div class="bg-gray-100 dark:bg-gray-700 rounded-lg p-3 flex-1">
+                                <h4 class="font-medium text-gray-900 dark:text-white">${result.comment.user.username}</h4>
+                                <p class="text-gray-700 dark:text-gray-300">${result.comment.content}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Just now</p>
+                            </div>
+                        </div>
+                    `;
+
+                    commentList.appendChild(commentDiv);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while trying to add the comment');
+            }
+        }
+
+        async function sharePost(postId) {
+            try {
+                const response = await fetch(`/api/posts/${postId}/share`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const result = await response.json();
+
+                if (result.error) {
+                    alert(result.error);
+                } else if (result.success) {
+                    alert('Post shared successfully!');
+                    // Optionally reload the page to see the shared post
+                    window.location.reload();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while trying to share the post');
+            }
+        }
+    </script>
+</body>
+</html>

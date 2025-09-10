@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ theme }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Social App</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/theme.css">
+    <style>
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .dark .modal-content {
+            background-color: #374151;
+            color: white;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6B7280;
+        }
+
+        .dark .close-btn {
+            color: #D1D5DB;
+        }
+
+        /* Create Post Modal specific styles */
+        #createPostModal .modal-content {
+            max-width: 600px;
+        }
+
+        .tab-button {
+            padding: 0.5rem 1rem;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+        }
+
+        .tab-button.active {
+            border-bottom-color: #3B82F6;
+            color: #3B82F6;
+        }
+
+        .dark .tab-button.active {
+            color: #60A5FA;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white dark:bg-gray-800 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <a href="/" class="text-xl font-bold text-blue-600 dark:text-blue-400">SocialApp</a>
+                    </div>
+                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                        <a href="/" class="border-transparent text-gray-500 dark:text-gray-300 hover:border-gray-300 hover:text-gray-700 dark:hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Home
+                        </a>
+                        <a href="/groups" class="border-transparent text-gray-500 dark:text-gray-300 hover:border-gray-300 hover:text-gray-700 dark:hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Groups
+                        </a>
+                        <a href="/profile" class="border-blue-500 text-gray-900 dark:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Profile
+                        </a>
+                    </div>
+                </div>
+                <div class="hidden sm:ml-6 sm:flex sm:items-center">
+                    <div class="ml-3 relative">
+                        <div>
+                            <a href="/profile" class="flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <img class="h-8 w-8 rounded-full" src="{{ user.profile_picture or '/static/images/default-avatar.png' }}" alt="{{ user.username }}">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Profile Header -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="relative">
+                        <img src="{{ user.profile_picture or '/static/images/default-avatar.png' }}" alt="{{ user.username }}" class="h-24 w-24 rounded-full">
+                        <!-- Profile Picture Update Form -->
+                        <form action="/api/profile/picture" method="post" enctype="multipart/form-data" class="mt-3">
+                            <label for="profile_picture" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Update Profile Picture</label>
+                            <div class="flex items-center">
+                                <input type="file" id="profile_picture" name="profile_picture" accept="image/*" required class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                                <button type="submit" class="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                                    Update
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="ml-6">
+                        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ user.username }}</h1>
+                        <p class="text-gray-600 dark:text-gray-300">{{ user.email }}</p>
+                        <p class="text-gray-500 dark:text-gray-400 mt-2">Joined {{ user.created_at.strftime('%B %Y') }}</p>
+
+                        <!-- Follower/Following Stats -->
+                        <div class="flex mt-4 space-x-6">
+                            <a href="/followers" class="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">
+                                <span class="font-semibold">{{ user.follower_count or 0 }}</span>
+                                <span>Followers</span>
+                            </a>
+                            <a href="/following" class="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">
+                                <span class="font-semibold">{{ user.following_count or 0 }}</span>
+                                <span>Following</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-col space-y-3">
+                    <button id="editProfileBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                        Edit Profile
+                    </button>
+                    <button id="createGroupBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md">
+                        Create Group
+                    </button>
+                    <button id="createPostBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md">
+                        Create Post
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Profile Modal -->
+        <div id="editProfileModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white">Edit Profile</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <form action="/api/profile" method="post" class="space-y-4">
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username</label>
+                        <input type="text" id="username" name="username" value="{{ user.username }}" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                    </div>
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                        <input type="email" id="email" name="email" value="{{ user.email }}" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                    </div>
+                    <div>
+                        <label for="bio" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bio</label>
+                        <textarea id="bio" name="bio" rows="3" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">{{ user.bio or '' }}</textarea>
+                    </div>
+                    <div>
+                        <label for="location" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Location</label>
+                        <input type="text" id="location" name="location" value="{{ user.location or '' }}" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" class="cancel-btn px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Create Group Modal -->
+        <div id="createGroupModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white">Create Group</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <form action="/api/groups" method="post" class="space-y-4">
+                    <div>
+                        <label for="groupName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Group Name</label>
+                        <input type="text" id="groupName" name="name" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                    </div>
+                    <div>
+                        <label for="groupDescription" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                        <textarea id="groupDescription" name="description" rows="3" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"></textarea>
+                    </div>
+                    <div>
+                        <label for="groupVisibility" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Visibility</label>
+                        <select id="groupVisibility" name="visibility" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                            <option value="public">Public</option>
+                            <option value="private">Private</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" class="cancel-btn px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md">Create Group</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Create Post Modal -->
+        <div id="createPostModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white">Create Post</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+
+                <div class="flex border-b border-gray-200 dark:border-gray-700 mb-4">
+                    <div class="tab-button active" data-tab="text">Text</div>
+                    <div class="tab-button" data-tab="image">Image</div>
+                    <div class="tab-button" data-tab="video">Video</div>
+                </div>
+
+                <form action="/api/posts" method="post" enctype="multipart/form-data" class="space-y-4">
+                    <div class="tab-content active" id="text-tab">
+                        <div>
+                            <label for="postTitle" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
+                            <input type="text" id="postTitle" name="title" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                        </div>
+                        <div>
+                            <label for="postContent" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Content</label>
+                            <textarea id="postContent" name="content" rows="4" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="image-tab">
+                        <div>
+                            <label for="postImage" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Upload Image</label>
+                            <input type="file" id="postImage" name="image" accept="image/*" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                        </div>
+                        <div>
+                            <label for="imageCaption" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Caption</label>
+                            <textarea id="imageCaption" name="caption" rows="3" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="video-tab">
+                        <div>
+                            <label for="postVideo" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Upload Video</label>
+                            <input type="file" id="postVideo" name="video" accept="video/*" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                        </div>
+                        <div>
+                            <label for="videoCaption" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Caption</label>
+                            <textarea id="videoCaption" name="caption" rows="3" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" class="cancel-btn px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md">Create Post</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Theme Selector -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Theme Preferences</h2>
+            <form action="/api/theme" method="post">
+                <div class="flex items-center space-x-4">
+                    <label class="flex items-center">
+                        <input type="radio" name="theme" value="light" {% if theme =='light' %}checked{% endif %} class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300">
+                        <span class="ml-2 text-gray-700 dark:text-gray-300">Light</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="theme" value="dark" {% if theme =='dark' %}checked{% endif %} class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300">
+                        <span class="ml-2 text-gray-700 dark:text-gray-300">Dark</span>
+                    </label>
+                </div>
+                <button type="submit" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                    Save Theme
+                </button>
+            </form>
+        </div>
+
+        <!-- User Posts -->
+        <div>
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Your Posts</h2>
+
+            {% if posts %}
+            <div class="space-y-6">
+                {% for post in posts %}
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                    <div class="flex items-start mb-4">
+                        <img src="{{ user.profile_picture or '/static/images/default-avatar.png' }}" alt="{{ user.username }}" class="h-10 w-10 rounded-full mr-3">
+                        <div>
+                            <h3 class="font-semibold text-gray-900 dark:text-white">{{ user.username }}</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ post.created_at.strftime('%B %d, %Y at %H:%M') }}</p>
+                        </div>
+                    </div>
+
+                    <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-2">{{ post.title }}</h4>
+                    <p class="text-gray-700 dark:text-gray-300 mb-4">{{ post.content }}</p>
+
+                    {% if post.image_url %}
+                    <img src="{{ post.image_url }}" alt="Post image" class="w-full rounded-lg mb-4">
+                    {% endif %}
+
+                    {% if post.video_url %}
+                    <video src="{{ post.video_url }}" controls class="w-full rounded-lg mb-4"></video>
+                    {% endif %}
+
+                    <div class="flex items-center text-gray-500 dark:text-gray-400">
+                        <span class="flex items-center mr-4">
+                            <i class="fas fa-thumbs-up mr-1"></i>
+                            <span>{{ post.likes|length }}</span>
+                        </span>
+
+                        <span class="flex items-center mr-4">
+                            <i class="fas fa-comment mr-1"></i>
+                            <span>{{ post.comments|length }}</span>
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 text-center">
+                <i class="fas fa-feather text-gray-400 dark:text-gray-500 text-4xl mb-3"></i>
+                <p class="text-gray-500 dark:text-gray-400">You haven't created any posts yet.</p>
+                <button id="createFirstPostBtn" class="mt-3 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md">
+                    Create Your First Post
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <script>
+        // Modal functionality
+        const modals = {
+            editProfile: document.getElementById('editProfileModal'),
+            createGroup: document.getElementById('createGroupModal'),
+            createPost: document.getElementById('createPostModal')
+        };
+
+        const buttons = {
+            editProfile: document.getElementById('editProfileBtn'),
+            createGroup: document.getElementById('createGroupBtn'),
+            createPost: document.getElementById('createPostBtn'),
+            createFirstPost: document.getElementById('createFirstPostBtn')
+        };
+
+        const closeButtons = document.querySelectorAll('.close-btn');
+        const cancelButtons = document.querySelectorAll('.cancel-btn');
+
+        // Open modals
+        buttons.editProfile.addEventListener('click', () => openModal(modals.editProfile));
+        buttons.createGroup.addEventListener('click', () => openModal(modals.createGroup));
+        buttons.createPost.addEventListener('click', () => openModal(modals.createPost));
+
+        if (buttons.createFirstPost) {
+            buttons.createFirstPost.addEventListener('click', () => openModal(modals.createPost));
+        }
+
+        // Close modals
+        closeButtons.forEach(btn => {
+            btn.addEventListener('click', closeModals);
+        });
+
+        cancelButtons.forEach(btn => {
+            btn.addEventListener('click', closeModals);
+        });
+
+        // Close modal if clicked outside
+        window.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) {
+                closeModals();
+            }
+        });
+
+        function openModal(modal) {
+            closeModals();
+            modal.style.display = 'flex';
+        }
+
+        function closeModals() {
+            for (const key in modals) {
+                modals[key].style.display = 'none';
+            }
+        }
+
+        // Tab functionality for create post modal
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.getAttribute('data-tab');
+
+                // Update active tab
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                // Show active content
+                tabContents.forEach(content => {
+                    content.classList.remove('active');
+                    if (content.id === `${tabId}-tab`) {
+                        content.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
