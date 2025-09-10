@@ -7,10 +7,6 @@ from sqlalchemy.orm import sessionmaker
 # Use Railway's DATABASE_URL if available, otherwise fall back to SQLite
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./social_app.db")
 
-# Handle PostgreSQL URL format (Railway uses PostgreSQL)
-if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-
 engine = create_engine(DATABASE_URL)
 
 if DATABASE_URL.startswith("sqlite"):
@@ -31,3 +27,4 @@ def get_db():
         yield db
     finally:
         db.close()
+
